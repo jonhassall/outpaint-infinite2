@@ -15,6 +15,9 @@ services:
       - .env
     environment:
       HF_HOME: /models/huggingface
+      # Fall back to standard HTTP downloads: hf-xet can fail in containers with
+      # "Background writer channel closed" while fetching large model shards.
+      HF_HUB_DISABLE_XET: "1"
       OUTPUT_DIR: /data/outputs
       PORT: ${CONTAINER_PORT:-8000}
     volumes:
