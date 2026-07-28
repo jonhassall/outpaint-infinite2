@@ -21,6 +21,37 @@ from .outpaint_helpers import (
 logger = logging.getLogger(__name__)
 
 
+def _patch_qwen3_vl_rope_config() -> None:
+    """Handle Krea's null Qwen3-VL RoPE config with Transformers 4.57.x.
+
+    The Krea checkpoint's text config has ``rope_scaling: null``.  Transformers
+    4.57 ships Qwen3-VL support but later assumes this value is a mapping while
+    constructing the rotary embedding.  The model's default MRoPE layout is the
+    same fallback used by Transformers when the field is omitted.
+    """
+    try:
+        from transformers.models.qwen3_vl.modeling_qwen3_vl import (
+            Qwen3VLTextRotaryEmbedding,
+        )
+    except ImportError:
+        return
+
+    original_init = Qwen3VLTextRotaryEmbedding.__init__
+    if getattr(original_init, "_krea_null_rope_patch", False):
+        return
+
+    def compatible_init(self, config, *args, **kwargs):
+        if getattr(config, "rope_scaling", None) is None:
+            config.rope_scaling = {
+                "rope_type": "default",
+                "mrope_section": [24, 20, 20],
+            }
+        original_init(self, config, *args, **kwargs)
+
+    compatible_init._krea_null_rope_patch = True
+    Qwen3VLTextRotaryEmbedding.__init__ = compatible_init
+
+
 @dataclass(frozen=True)
 class GenerationResult:
     image: Image.Image
@@ -89,6 +120,8 @@ class OutpaintEngine:
                 self.settings.outpaint_revision,
                 dtype,
             )
+
+            _patch_qwen3_vl_rope_config()
 
             pipe = DiffusionPipeline.from_pretrained(
                 self.settings.base_model,
