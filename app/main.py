@@ -75,5 +75,4 @@ app = gr.mount_gradio_app(
     max_file_size=f"{settings.max_upload_mb}mb",
     allowed_paths=[str(settings.output_dir)],
     show_error=True,
-    footer_links=["api", "gradio"],
 )
