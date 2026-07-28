@@ -1,0 +1,25 @@
+services:
+  outpaint:
+    build:
+      context: .
+      args:
+        TORCH_VERSION: ${TORCH_VERSION:-2.13.0}
+        TORCH_INDEX_URL: ${TORCH_INDEX_URL:-https://download.pytorch.org/whl/cu126}
+    image: krea2-outpaint-server:local
+    ports:
+      - "${HOST_PORT:-8000}:${CONTAINER_PORT:-8000}"
+    gpus: all
+    shm_size: "16gb"
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      HF_HOME: /models/huggingface
+      OUTPUT_DIR: /data/outputs
+      PORT: ${CONTAINER_PORT:-8000}
+    volumes:
+      - hf-cache:/models/huggingface
+      - ./data:/data
+
+volumes:
+  hf-cache:

@@ -1,0 +1,15 @@
+# torch is installed separately in the Dockerfile from the official CUDA wheel index.
+diffusers==0.39.0
+transformers>=4.57,<5
+accelerate>=1.10
+safetensors>=0.6
+peft>=0.17
+sentencepiece>=0.2
+huggingface_hub>=0.34
+pillow>=11
+numpy>=2
+fastapi>=0.116,<1
+uvicorn[standard]>=0.35,<1
+gradio==6.20.0
+python-multipart>=0.0.20
+protobuf>=5
